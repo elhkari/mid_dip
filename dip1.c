@@ -17,7 +17,7 @@
 
 double rho[NUM], z[NUM2], psi[NUM][NUM2], vel[NUM][NUM2], V[NUM][NUM2];
 
-double E, num, denum, maxgE;
+double E, num, denum, maxgE, E_kin, E_pot, C;
 double gE[NUM][NUM2];
 
 void prepfuncs()
@@ -66,8 +66,8 @@ void calc_E()
 	}
 
 
-	sum1 = dz*sum1/(4.*drho);
-	sum2 = dz*sum2/(4.*drho);
+	sum1 = dz*sum1/(8.*drho);
+	sum2 = dz*sum2/(8.*drho);
 	
 	sum3 = drho*sum3 /(4.* dz);
 	sum4 = drho*sum4 /(4.* dz);
@@ -80,10 +80,14 @@ void calc_E()
 	sum9 = drho*L*sum9 / 4.;
 	sum10 = drho*L*sum10 / 4.;
 
-	sum11 = drho*dz*sum11 / 8.;
-	sum12 = drho*dz*sum12 / 8.;
+	sum11 = drho*dz*sum11 / 4.;
+	sum12 = drho*dz*sum12 / 4.;
 
-	num = sum1 + sum2 + sum3 + sum4 - sum5 - sum6 - sum7 - sum8 + sum9 + sum10;
+	//num = sum1 + sum2 + sum3 + sum4 - sum5 - sum6 - sum7 - sum8 + sum9 + sum10;
+	E_kin = sum1 + sum2 + sum3 + sum4;
+	E_pot = sum5 + sum6 + sum7 + sum8;
+	C = sum9 + sum10;
+	num = E_kin - E_pot + sum9 + sum10;
 	denum = sum11 + sum12;
 
 	E = num / denum;
@@ -104,7 +108,7 @@ void calc_gE()
 				 rho[i] * (psi[i][j] - psi[i][j-1])*drho / dz -
 				 2*psi[i][j]*V[i][j]*rho[i]*drho*dz;
 
-			dw = psi[i][j]*rho[i]*drho*dz;
+			dw = 2.*psi[i][j]*rho[i]*drho*dz;
 
 			gE[i][j] = (dw*num - dv*denum) / (denum*denum);
 		}
@@ -132,7 +136,7 @@ int main()
 
 	step = 0;
 	G = 0.995;
-	dt = 8e-3;
+	dt = 8e-2;
 
 	calc_E();
 	calc_gE();
@@ -147,7 +151,7 @@ int main()
 		}
 	}
 
-	printf("%.14le		%.14le\n", E, maxgE);
+	printf("%.14le	%.14le	%.14le	%.14le\n", E, 2.*E_kin, 2.*E_pot, maxgE);
 
 
 
@@ -178,12 +182,13 @@ int main()
 
 		if (step == 5000)
 		{
-			printf("%.14le		%.14le\n", E, maxgE);
+			printf("%.14le	%.14le	%.14le	%.14le\n", E, 2.*E_kin, 2.*E_pot, maxgE);
 			step = 0;
 		}
 
 		step++;
 	}
+	printf("%.14le	%.14le	%.14le	%.14le\n", E, 2.*E_kin, 2.*E_pot, maxgE);
 
 	time_t tstop = time(NULL);
 	sec = tstop - tstart;
