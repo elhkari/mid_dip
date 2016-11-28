@@ -1,4 +1,3 @@
-//
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -7,7 +6,6 @@
 #define OUTFILE "dip1out.txt"
 
 #define a 10.
-//#define b 10.
 #define L 1.
 
 #define NUM 301
@@ -15,16 +13,7 @@
 #define c 5.e-15
 #define drho ((a)/(NUM - c))
 #define dz ((a)/(NUM - c))
-/*
-#define lNUM 0
 
-#define S (0.)
-#define sdrho ( S/(lNUM - 0.5))
-#define sdz ( S/(lNUM - 0.5))
-
-#define drho ((a-S)/(NUM - lNUM))
-#define dz ((a-S)/(NUM - lNUM))
-*/
 double rho[NUM], z[NUM2], psi[NUM][NUM2], vel[NUM][NUM2], V[NUM][NUM2];
 
 double E, num, denum, maxgE, E_kin, E_pot, C;
@@ -93,7 +82,6 @@ void calc_E()
 	sum11 = drho*dz*sum11 / 4.;
 	sum12 = drho*dz*sum12 / 4.;
 
-	//num = sum1 + sum2 + sum3 + sum4 - sum5 - sum6 - sum7 - sum8 + sum9 + sum10;
 	E_kin = sum1 + sum2 + sum3 + sum4;
 	E_pot = sum5 + sum6 + sum7 + sum8;
 	C = sum9 + sum10;
@@ -109,7 +97,7 @@ void calc_gE()
 	int i, j;
 ////////////////////////////////////////////////////////////////////////////////////////
 	i = 0;
-//
+/////
 	j = 0;
 
 	dv = (rho[i + 1] + rho[i])*(psi[i + 1][j] - psi[i][j])*(-1.)*dz / (4.*drho) +
@@ -120,7 +108,7 @@ void calc_gE()
 	dw = psi[i][j] * rho[i] * drho*dz / 2.;
 
 	gE[i][j] = (dw*num - dv*denum) / (denum*denum);
-	//
+/////
 	j = NUM2 - 1;
 
 	dv = (rho[i + 1] + rho[i])*(psi[i + 1][j] - psi[i][j])*(-1.)*dz / (4.*drho) +
@@ -130,7 +118,7 @@ void calc_gE()
 	dw = psi[i][j] * rho[i] * drho*dz / 2.;
 
 	gE[i][j] = (dw*num - dv*denum) / (denum*denum);
-	//
+/////
 
 	for (j = 1; j < NUM2 - 1; j++)
 	{
@@ -143,9 +131,9 @@ void calc_gE()
 
 			gE[i][j] = (dw*num - dv*denum) / (denum*denum);
 	}
-////////////
+///////////////////////////////////////////////////////////////////////////////////
 	i = NUM - 1;
-	//
+/////
 	j = 0;
 
 	dv = (rho[i] + rho[i-1])*(psi[i][j] - psi[i-1][j])*dz / (4.*drho) +
@@ -156,7 +144,7 @@ void calc_gE()
 	dw = psi[i][j] * rho[i] * drho*dz / 2.;
 
 	gE[i][j] = (dw*num - dv*denum) / (denum*denum);
-	//
+/////
 	j = NUM2 - 1;
 
 	dv = (rho[i] + rho[i-1])*(psi[i][j] - psi[i-1][j])*dz / (4.*drho) +
@@ -166,7 +154,7 @@ void calc_gE()
 	dw = psi[i][j] * rho[i] * drho*dz / 2.;
 
 	gE[i][j] = (dw*num - dv*denum) / (denum*denum);
-	//
+//////
 
 	for (j = 1; j < NUM2 - 1; j++)
 	{
@@ -179,8 +167,7 @@ void calc_gE()
 
 		gE[i][j] = (dw*num - dv*denum) / (denum*denum);
 	}
-//////////////////////////////////////////////////////////////////////////////
-
+////////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////////
 	j = 0;
@@ -197,7 +184,7 @@ void calc_gE()
 
 		gE[i][j] = (dw*num - dv*denum) / (denum*denum);
 	}
-	////////////
+////////////
 	j = NUM2 - 1;
 	
 	for (i = 1; i < NUM - 1; i++)
@@ -211,7 +198,7 @@ void calc_gE()
 
 		gE[i][j] = (dw*num - dv*denum) / (denum*denum);
 	}
-	//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 
 	for (i = 1; i < NUM - 1; i++)
 	{
@@ -306,13 +293,14 @@ int main()
 			n1 = i; n2 = j;
 		}
 	}
-
+/*
 	n3 = a + 1.;
 	for (j = 0; j < NUM2; j++)
 	{
 		if (n3 > fabs(z[j]))
 			n3 = fabs(z[j]);
 	}
+*/
 	printf("%.14le	%.14le	%.14le	%.14le	%.14le	%.14le\n", E, E_kin, E_pot, maxgE, rho[0], n3);
 
 
