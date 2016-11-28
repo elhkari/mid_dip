@@ -12,15 +12,19 @@
 
 #define NUM 301
 #define NUM2 601
-#define lNUM 20
+#define c 5.e-15
+#define drho ((a)/(NUM - c))
+#define dz ((a)/(NUM - c))
+/*
+#define lNUM 0
 
-#define S (0.5)
+#define S (0.)
 #define sdrho ( S/(lNUM - 0.5))
 #define sdz ( S/(lNUM - 0.5))
 
 #define drho ((a-S)/(NUM - lNUM))
 #define dz ((a-S)/(NUM - lNUM))
-
+*/
 double rho[NUM], z[NUM2], psi[NUM][NUM2], vel[NUM][NUM2], V[NUM][NUM2];
 
 double E, num, denum, maxgE, E_kin, E_pot, C;
@@ -243,50 +247,13 @@ void normto1()
 int main()
 {
 	int i, j, k, l, step, sec;
-	double G, dt, F, v, n1, n2;
+	double G, dt, F, v, n1, n2, n3;
 	time_t tstart = time(NULL);
-	/*
-	for (i = 0; i < lNUM; i++)
-	{
-		rho[i] = 0.5*sdrho + sdrho*i;
-	}
-
-	for (i = lNUM; i < NUM; i++)
-	{
-		rho[i] = rho[i-1] + drho;
-	}
-	printf("%.14le	%.14le\n", rho[0], rho[300]);
-//////////////////////////
 	
-	k = 0;
-	for (j = (NUM2/2); j < (NUM2/2 + lNUM) ; j++)
-	{
-		z[j] = 0.5*sdz + k*sdz;
-		k++;
-	}
-	for (j = (NUM2 / 2 + lNUM); j < NUM2; j++)
-	{
-		z[j] = z[j - 1] + dz;
-	}
-
-	k = 0;
-	for (j = (NUM2 / 2 - 1); j > (NUM2 / 2 - lNUM); j--)
-	{
-		z[j] = -0.5*sdz - k*sdz;
-		k++;
-	}
-
-	for (j = (NUM2 / 2 - lNUM); j >= 0; j--)
-	{
-		z[j] = z[j + 1] - dz;
-	}
-	
-	printf("%.14le	%.14le	%.14le	%.14le	%.14le	%.14le\n", z[0], z[280], z[299], z[300], z[320], z[600]);
-	*/
-	
+/*	
 	for (i = 0; i < NUM; i++)
 	{
-		rho[i] = 0.5*drho + drho*i;
+		rho[i] = c*drho + drho*i;
 	}
 
 	for (j = 0; j < NUM2; j++)
@@ -295,7 +262,30 @@ int main()
 	}
 	printf("%.14le	%.14le\n", rho[0], rho[300]);
 	printf("%.14le	%.14le	%.14le	%.14le	%.14le	%.14le\n", z[0], z[280], z[299], z[300], z[320], z[600]);
+*/	
 
+	
+	for (i = 0; i < NUM; i++)
+	{
+		rho[i] = c*drho + drho*i*i*i/((NUM - 1.)*(NUM - 1.));
+	}
+
+	k = 0;
+	for (j = NUM2/2; j < NUM2; j++)
+	{
+		z[j] = c*dz + dz*k*k*k / ((NUM - 1.)*(NUM - 1.));
+		k++;
+	}
+	k = 0;
+	for (j = (NUM2/2 - 1); j >= 0; j--)
+	{
+		z[j] = -c*dz - dz*k*k*k / ((NUM - 1.)*(NUM - 1.));
+		k++;
+	}
+	printf("%.14le	%.14le\n", rho[0], rho[300]);
+	printf("%.14le	%.14le	%.14le	%.14le	%.14le	%.14le\n", z[0], z[280], z[299], z[300], z[320], z[600]);
+	
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	prepfuncs();
 
 	n1 = n2 = 0;
@@ -305,7 +295,7 @@ int main()
 
 	calc_E();
 	calc_gE();
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	maxgE = gE[0][0];
 	for (i = 0; i < NUM; i++)
 	{
@@ -317,7 +307,13 @@ int main()
 		}
 	}
 
-	printf("%.14le	%.14le	%.14le	%.14le %.14le\n", E, E_kin, E_pot, maxgE, z[0]);
+	n3 = a + 1.;
+	for (j = 0; j < NUM2; j++)
+	{
+		if (n3 > fabs(z[j]))
+			n3 = fabs(z[j]);
+	}
+	printf("%.14le	%.14le	%.14le	%.14le	%.14le	%.14le\n", E, E_kin, E_pot, maxgE, rho[0], n3);
 
 
 
@@ -351,8 +347,7 @@ int main()
 
 		if (step == 5000)
 		{
-			//printf("%.14le	%.14le	%.14le	%.14le	%.14le	%.14le\n", E, E_kin, E_pot, maxgE, n1, n2);
-			printf("%.14le	%.14le	%.14le	%.14le	%.14le	%.14le %.14le\n", E, E_kin, E_pot, maxgE, n1, n2, psi[0][300] - psi[1][299]);
+			printf("%.14le	%.14le	%.14le	%.14le	%.14le	%.14le\n", E, E_kin, E_pot, maxgE, n1, n2);
 			step = 0;
 		}
 
