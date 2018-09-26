@@ -6,23 +6,38 @@
 #define OUTFILE "dip1out.txt"
 
 #define a 10.
-#define as 0.5 //длина отрезка с более мелким шагом
-#define L 1.
+//#define z0 10.	//рассто€ние от 0 до плоскости
+//#define as  3.0*1.0	//длина приращени€ последнего шага
+#define L (0.)
 
-#define NUM 301
-#define NUM2 (2*NUM - 1)
-#define NUMs 120 //кол-во точек с более мелким шагом
+#define NUM 100
+#define NUM2 (2*NUM)
 
-#define c 5.e-02 //коэф. определ€ет рассто€ние от 0 до ближайшей точки
+#define h1  (a/((NUM-1)+((NUM-2)*(NUM-1)*hrho)/2.))  // рассто€ние от нул€ до первой точки
+#define c 0.699
 
-#define hrhos (as/NUMs)
-#define hzs (as/NUMs)
+#define x 8. //на сколько поднимаем плоскость
+#define M ((int)(x/hz))
+//#define h2  (z0/(NUM+((NUM-1)*NUM*hrho)/2.))  // рассто€ние от нул€ до первой точки (в сторону плоскости) 
 
-#define hrho ((a - as)/(NUM - NUMs))
-#define hz ((a - as)/(NUM - NUMs))
+#define hrho (as/(NUM-2))
+#define hz (a/(NUM-1+c))
+//#define hz0 as/(NUM-2)
 
 #define G 0.995
-#define dt 8.e-2
+#if NUM == 100
+	#define dt 2.e-1
+	#define as  (3.0*1.0)
+#elif NUM == 150
+	#define dt 2.e-1
+	#define as  (3.0*1.5)
+#elif NUM == 200
+	#define dt 2.e-1
+	#define as  (3.0*2.0)
+#elif NUM == 300
+	#define dt 2.e-1
+	#define as  (3.0*3.0)
+#endif
 
 double rho[NUM], z[NUM2], drho[NUM], dz[NUM2], psi[NUM][NUM2], vel[NUM][NUM2], V[NUM][NUM2];
 
@@ -34,7 +49,7 @@ void prepfuncs()
 	int i, j;
 	for (i = 0; i < NUM; i++)
 	{
-		for (j = 0; j < NUM2; j++)
+		for (j = M; j < NUM2; j++)
 		{
 			V[i][j] = 1./(sqrt(rho[i] * rho[i] + z[j] * z[j]));
 			psi[i][j] = exp(-sqrt(rho[i] * rho[i] + z[j] * z[j]));
@@ -46,7 +61,7 @@ void prepfuncs()
 	{
 		drho[i] = (rho[i + 1] - rho[i]);
 	}
-	for (j = 0; j < NUM2-1; j++)
+	for (j = M; j < NUM2-1; j++)
 	{
 		dz[j] = (z[j + 1] - z[j]);
 	}
@@ -63,10 +78,10 @@ void calc_E()
 
 	for (i = 0; i < NUM - 1; i++)
 	{
-		sum9 += psi[i][0] * psi[i][0] * rho[i]*drho[i];
-		sum10 += psi[i + 1][0] * psi[i + 1][0] * rho[i + 1]*drho[i];
+		sum9 += psi[i][M] * psi[i][M] * rho[i]*drho[i];
+		sum10 += psi[i + 1][M] * psi[i + 1][M] * rho[i + 1]*drho[i];
 		
-		for (j = 0; j < NUM2 - 1; j++)
+		for (j = M; j < NUM2 - 1; j++)
 		{
 			sum1 += (psi[i + 1][j] - psi[i][j])*(psi[i + 1][j] - psi[i][j])*(rho[i + 1] + rho[i])*dz[j]/drho[i];
 			sum2 += (psi[i + 1][j + 1] - psi[i][j + 1])*(psi[i + 1][j + 1] - psi[i][j + 1])*(rho[i + 1] + rho[i])*dz[j] / drho[i];
@@ -137,10 +152,10 @@ void calc_gE()
 
 	for (i = 0; i < NUM-1; i++)
 	{
-		gE[i][0] -= L*psi[i][0] * rho[i] * drho[i] / (2.*denum);
-		gE[i+1][0] -= L*psi[i+1][0] * rho[i+1] * drho[i] / (2.*denum);
+		gE[i][M] -= L*psi[i][M] * rho[i] * drho[i] / (2.*denum);
+		gE[i+1][M] -= L*psi[i+1][M] * rho[i+1] * drho[i] / (2.*denum);
 
-		for (j = 0; j < NUM2-1; j++)
+		for (j = M; j < NUM2-1; j++)
 		{
 			//ѕ–ќ»«¬ќƒЌјя „»—Ћ»“≈Ћя
 
@@ -216,7 +231,7 @@ void normto1()
 	int i, j;
 	for (i = 0; i < NUM; i++)
 	{
-		for (j = 0; j < NUM2; j++)
+		for (j = M; j < NUM2; j++)
 		{
 			psi[i][j] = psi[i][j] / sqrt(denum);
 		}
@@ -227,71 +242,34 @@ void normto1()
 int main()
 {
 	int i, j, k, l, step, sec;
-	//double G, dt, F, v, n1, n2, n3;
 	double F, v, n1, n2, n3;
 	time_t tstart = time(NULL);
 	
-	/*
-	for (i = 0; i < NUM; i++)
+	rho[0] = 0;
+	for (i = 1; i < NUM; i++)
 	{
-		rho[i] = c*hrho + hrho*i;
+		rho[i] = rho[i-1] + h1*(1+(i-1)*hrho);
 	}
-
-	for (j = 0; j < NUM2; j++)
-	{
-		z[j] = -a + j*hz;
-	}
-	printf("%.14le	%.14le\n", rho[0], rho[300]);
-	printf("%.14le	%.14le	%.14le	%.14le	%.14le	%.14le\n", z[0], z[280], z[299], z[300], z[320], z[600]);
-	*/
-
 	
-	for (i = 0; i < NUMs; i++)
-	{
-		rho[i] = c*hrhos + hrhos*i;
-	}
-	for (i = NUMs; i < NUM; i++)
-	{
-		rho[i] = rho[i-1] + hrho;
-	}
-
 	k = 1;
-	z[NUM2 / 2] = c*hzs;
-	for (j = (NUM2/2 + 1); j < (NUM2/2 + NUMs); j++)
-	{
-		z[j] = c*hzs + hzs*k;
-		k++;
-	}
-	for (j = (NUM2 / 2 + NUMs); j < NUM2; j++)
+	z[NUM2 / 2] = c*hz;
+	for (j = NUM2 / 2 + 1; j < NUM2; j++)
 	{
 		z[j] = z[j-1] + hz;
-	}
-	k = 2;
-	for (j = (NUM2/2 - 1); j >= 0; j--)
-	{
-		z[j] = -z[j+k];
-		k= k+2;
+		k++;
 	}
 
-	/*
-	for (j = 0; j < (NUM2 / 2 - NUMs); j++)
+	l = 1;
+	z[NUM2 / 2 - 1] = -c*hz;
+	for (j = (NUM2 / 2 - 2); j >= M; j--)
 	{
-	z[j] = -a + hz*j;
-	k++;
+		z[j] = z[j+1]-hz;
+		l++;
 	}
-	for (j = (NUM2 / 2 - NUMs); j < (NUM2 / 2 + NUMs); j++)
-	{
-	z[j] = z[j - 1] + hzs;
-	}
-	for (j = (NUM2 / 2 + NUMs); j < NUM2; j++)
-	{
-	z[j] = z[j - 1] + hz;
-	}
-	*/
-
-	printf("%.14le	%.14le\n", rho[0], rho[300]);
-	printf("%.14le	%.14le	%.14le	%.14le	%.14le	%.14le\n\n", z[NUM2 / 2 -1],
-		z[NUM2 / 2], z[NUM2 / 2 + 1], z[NUM2 / 2 + NUMs -1], z[NUM2 / 2 + NUMs], z[NUM2 / 2 + NUMs + 1]);
+	printf("M = %d	hz = %.14le	h1 = %.14le	dh = %.14le\n", M, hz, h1, hrho);
+	printf("%.14le	%.14le\n", rho[0], rho[NUM - 1]);
+	printf("%.14le	%.14le	%.14le	%.14le	%.14le	%.14le\n\n", z[M],
+		z[NUM2 / 2 -1], z[NUM2 / 2], z[NUM2 / 2 + 1], z[NUM2 -2], z[NUM2-1]);
 	
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -299,16 +277,14 @@ int main()
 
 	n1 = n2 = 0;
 	step = 0;
-	//G = 0.995;
-	//dt = 8e-2;
 
 	calc_E();
 	calc_gE();
 
-	maxgE = gE[0][0];
+	maxgE = gE[0][M];
 	for (i = 0; i < NUM; i++)
 	{
-		for (j = 0; j < NUM2; j++)
+		for (j = M; j < NUM2; j++) //пров
 		{
 			if (maxgE < fabs(gE[i][j]))
 				maxgE = fabs(gE[i][j]);
@@ -325,7 +301,7 @@ int main()
 
 		for (k = 0; k < NUM; k++)
 		{
-			for (l = 0; l < NUM2; l++)
+			for (l = M; l < NUM2; l++)
 			{
 				vel[k][l] = G*(vel[k][l] + gE[k][l] * dt);
 				psi[k][l] = psi[k][l] + vel[k][l] * dt;
@@ -335,10 +311,10 @@ int main()
 		calc_E();
 		calc_gE();
 
-		maxgE = gE[0][0];
+		maxgE = gE[0][M];
 		for (i = 0; i < NUM; i++)
 		{
-			for (j = 0; j < NUM2; j++)
+			for (j = M; j < NUM2; j++)
 			{
 				if (maxgE < fabs(gE[i][j]))
 				{
@@ -348,7 +324,7 @@ int main()
 			}
 		}
 
-		if (step == 1000)
+		if (step == 5000)
 		{
 			normto1();
 			printf("%.14lf	%.14lf	%.14lf	%.14le	%.14lf	%.14lf\n", E, E_kin, E_pot, maxgE, n1, n2);
